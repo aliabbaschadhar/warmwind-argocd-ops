@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: haproxy-ingress
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: 'https://haproxytech.github.io/helm-charts'
+      chart: kubernetes-ingress
+      targetRevision: 1.41.0
+      helm:
+        valueFiles:
+          - '$values/values/haproxy-ingress-values.yaml'
+    - repoURL: 'git://git-server.gitops.svc.cluster.local/repo.git'
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: ingress-controller
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

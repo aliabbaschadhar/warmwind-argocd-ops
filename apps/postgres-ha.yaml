@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-ha
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'git://git-server.gitops.svc.cluster.local/repo.git'
+    targetRevision: HEAD
+    path: database
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: database
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

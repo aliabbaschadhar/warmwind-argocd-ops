@@ -1,0 +1,33 @@
+controller:
+  # HAProxy configuration overrides
+  config:
+    # 1. Accept PROXY protocol headers from the manually created DO Load Balancer
+    # We use 0.0.0.0/0 since DigitalOcean Load Balancer IPs are dynamic within the VPC
+    proxy-protocol: "0.0.0.0/0"
+
+    # 2. WebSocket & Tunnel Timeout
+    # Extends the timeout for WebSockets and HTTP tunnel connections to 30 minutes (default is 50s)
+    timeout-tunnel: "30m"
+
+    # Optional: Enable SSL redirection globally
+    ssl-redirect: "false"
+
+    global-config-snippet: |
+      h1-case-adjust authorization Authorization
+      h1-case-adjust host Host
+      h1-case-adjust upgrade Upgrade
+      h1-case-adjust connection Connection
+      h1-case-adjust origin Origin
+      h1-case-adjust sec-websocket-key Sec-WebSocket-Key
+      h1-case-adjust sec-websocket-version Sec-WebSocket-Version
+      h1-case-adjust sec-websocket-origin Sec-WebSocket-Origin
+      h1-case-adjust sec-websocket-protocol Sec-WebSocket-Protocol
+      h1-case-adjust sec-websocket-extensions Sec-WebSocket-Extensions
+      h1-case-adjust cookie Cookie
+
+  # Expose the Ingress Controller via NodePorts
+  service:
+    type: NodePort
+    nodePorts:
+      http: 30080
+      https: 30443

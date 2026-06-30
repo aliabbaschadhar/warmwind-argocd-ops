@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kasmweb
+  namespace: default
+spec:
+  serviceName: kasm-headless
+  replicas: 10
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: kasmweb
+  template:
+    metadata:
+      labels:
+        app: kasmweb
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - worker-node-1
+                      - worker-node-2
+      containers:
+        - name: chrome
+          image: kasmweb/chrome:1.15.0
+          ports:
+            - containerPort: 6901
+              name: http
+              protocol: TCP
+          env:
+            - name: VNC_PW
+              value: "password123"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kasm-headless
+  namespace: default
+  annotations:
+    haproxy.org/backend-config-snippet: |
+      default-server ssl verify none
+      timeout tunnel 30m
+      option h1-case-adjust-bogus-server
+spec:
+  clusterIP: None
+  selector:
+    app: kasmweb
+  ports:
+    - port: 6901
+      targetPort: 6901
+      name: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kasm-ingress
+  namespace: default
+  annotations:
+    # Dynamic cookie insertion for session stickiness
+    haproxy.org/cookie-persistence: "KASM_SESSION"
+    # Disable SSL redirection — plain HTTP access
+    haproxy.org/ssl-redirect: "false"
+    # WebSocket tunnel timeout
+    haproxy.org/timeout-tunnel: "30m"
+    # Backend talks HTTPS (KasmWeb serves TLS on 6901), skip cert verification
+    haproxy.org/backend-config-snippet: |
+      default-server ssl verify none
+      http-request set-header Authorization "Basic a2FzbV91c2VyOnBhc3N3b3JkMTIz"
+spec:
+  ingressClassName: haproxy
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kasm-headless
+                port:
+                  number: 6901

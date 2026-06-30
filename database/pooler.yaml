@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-ha-pooler
+  namespace: database
+spec:
+  cluster:
+    name: postgres-ha
+
+  # Deploy 2 instances of PgBouncer for HA
+  instances: 2
+
+  # Forward write/read traffic to the primary node
+  type: rw
+
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "2500"
+      default_pool_size: "50"
+      min_pool_size: "10"
+      reserve_pool_size: "5"
+      reserve_pool_timeout: "5"
+      max_db_connections: "100"

@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: postgres-ha-alerts
+  namespace: database
+  labels:
+    release: prometheus-stack
+spec:
+  groups:
+  - name: postgres-ha.rules
+    rules:
+    - alert: PostgresClusterDegraded
+      expr: sum(up{pod=~"postgres-ha-[0-9]+"}) < 3
+      for: 1m
+      labels:
+        severity: warning
+        namespace: database
+      annotations:
+        summary: "PostgreSQL HA Cluster degraded"
+        description: "PostgreSQL HA cluster has fewer than 3 healthy nodes. Current count is {{ $value }}."
+
+    - alert: PostgresNoPrimary
+      expr: absent(cnpg_pg_replication_in_recovery == 0)
+      for: 10s
+      labels:
+        severity: critical
+        namespace: database
+      annotations:
+        summary: "No PostgreSQL primary node available"
+        description: "The primary database instance is offline. Failover is either in progress or has failed."
+
+    - alert: PostgresReplicationLag
+      expr: max(cnpg_pg_replication_slots_pg_wal_lsn_diff) > 67108864
+      for: 2m
+      labels:
+        severity: warning
+        namespace: database
+      annotations:
+        summary: "PostgreSQL replication lag is high"
+        description: "A replica database is lagging behind the primary by more than 64MB of WAL data."
+
+    - alert: PgBouncerClientConnectionsHigh
+      expr: sum(cnpg_pgbouncer_pools_cl_active) > 2250
+      for: 1m
+      labels:
+        severity: warning
+        namespace: database
+      annotations:
+        summary: "PgBouncer client connections are very high"
+        description: "PgBouncer is handling {{ $value }} active client connections, which is over 90% of the target limit."

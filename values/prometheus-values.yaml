@@ -1,0 +1,23 @@
+grafana:
+  enabled: true
+  service:
+    type: NodePort
+    nodePort: 30000
+  persistence:
+    enabled: true
+    storageClassName: "do-block-storage"
+    size: 5Gi
+
+prometheus:
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: "do-block-storage"
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+  service:
+    type: NodePort
+    nodePort: 30090

@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: postgres-ha-alert-config
+  namespace: database
+  labels:
+    release: prometheus-stack
+spec:
+  route:
+    groupBy: ['alertname']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    receiver: 'email-receiver'
+  receivers:
+  - name: 'email-receiver'
+    emailConfigs:
+    - to: 'work.aliabbaschadhar@gmail.com'
+      from: 'work.aliabbaschadhar@gmail.com'
+      smarthost: 'smtp.gmail.com:587'
+      authUsername: 'work.aliabbaschadhar@gmail.com'
+      authPassword:
+        name: alertmanager-smtp-secret
+        key: password
+      requireTLS: true
+      sendResolved: true
