@@ -32,4 +32,5 @@ prometheus:
     ingressClassName: haproxy
     hosts:
       - prom.warmwind.demo
-    path: /
+    paths:
+      - /
