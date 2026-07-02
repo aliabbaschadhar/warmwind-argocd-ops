@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-ingress
+  namespace: argocd
+  annotations:
+    # Disable SSL redirection if you want to support testing on plain HTTP
+    haproxy.org/ssl-redirect: "false"
+    # ArgoCD server uses TLS internally on port 443; bypass cert verification
+    haproxy.org/backend-config-snippet: |
+      default-server ssl verify none
+spec:
+  ingressClassName: haproxy
+  rules:
+    - host: argocd.warmwind.demo
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  name: https
