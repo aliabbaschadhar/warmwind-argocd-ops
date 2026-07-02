@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: "git://git-server.gitops.svc.cluster.local/repo.git"
+    repoURL: "https://github.com/aliabbaschadhar/warmwind-argocd-ops"
     targetRevision: HEAD
     path: apps
   destination:

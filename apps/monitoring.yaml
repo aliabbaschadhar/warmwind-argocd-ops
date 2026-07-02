@@ -12,7 +12,7 @@ spec:
       helm:
         valueFiles:
           - "$values/values/prometheus-values.yaml"
-    - repoURL: "git://git-server.gitops.svc.cluster.local/repo.git"
+    - repoURL: "https://github.com/aliabbaschadhar/warmwind-argocd-ops"
       targetRevision: HEAD
       ref: values
   destination:
